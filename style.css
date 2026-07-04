@@ -360,11 +360,53 @@ body {
   filter: sepia(1) hue-rotate(100deg) saturate(0.5) brightness(0.3);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
+  #ui-overlay {
+    padding: var(--space-base) var(--space-sm);
+  }
+
   .header {
     width: 100%;
+    padding: var(--space-sm);
   }
+
+  .header-top .headline-md {
+    font-size: 17px;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .target-name {
+    font-size: 21px;
+    margin-top: 4px;
+    min-height: 26px;
+  }
+
+  .progress-row {
+    margin-top: var(--space-sm);
+  }
+
+  .stats-row {
+    margin-top: 4px;
+  }
+
+  .feedback {
+    margin-top: 4px;
+    font-size: 13px;
+    min-height: 16px;
+  }
+
+  #footer-info {
+    display: none;
+  }
+
   .result-grade {
     font-size: 72px;
+  }
+
+  .result-card {
+    padding: var(--space-lg) var(--space-md);
   }
 }
