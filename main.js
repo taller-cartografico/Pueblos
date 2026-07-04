@@ -9,6 +9,7 @@
   var COLOR_SUCCESS = '#2f6b4f';
   var COLOR_ERROR = '#ba1a1a';
   var COLOR_NEUTRAL = '#8f9a94';
+  var COLOR_PENDING = '#d4a843';
 
   var loadingOverlayEl = document.getElementById('loading-overlay');
   var loadingFillEl = document.getElementById('loading-fill');
@@ -28,6 +29,9 @@
   var resultDetailEl = document.getElementById('result-detail');
   var shareBtn = document.getElementById('share-btn');
   var replayBtn = document.getElementById('replay-btn');
+  var chooseBtn = document.getElementById('choose-btn');
+  var newsletterBtn = document.getElementById('newsletter-btn');
+  var newsletterNoteEl = document.getElementById('newsletter-note');
 
   if (typeof maplibregl === 'undefined') {
     loadingOverlayEl.classList.add('hidden');
@@ -65,6 +69,31 @@
     return [[minX, minY], [maxX, maxY]];
   }
 
+  // Usa solo el anillo con más vértices (la masa terrestre principal) para
+  // que islas lejanas de un mismo municipio (p. ej. Mona en Mayagüez) no
+  // distorsionen el encuadre al revelar la respuesta correcta.
+  function computeMainRingBounds(feature) {
+    var polygons = feature.geometry.type === 'MultiPolygon' ? feature.geometry.coordinates : [feature.geometry.coordinates];
+    var mainRing = null;
+    var mainRingLength = -1;
+    polygons.forEach(function (poly) {
+      var outerRing = poly[0];
+      if (outerRing.length > mainRingLength) {
+        mainRingLength = outerRing.length;
+        mainRing = outerRing;
+      }
+    });
+
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    mainRing.forEach(function (c) {
+      if (c[0] < minX) minX = c[0];
+      if (c[0] > maxX) maxX = c[0];
+      if (c[1] < minY) minY = c[1];
+      if (c[1] > maxY) maxY = c[1];
+    });
+    return [[minX, minY], [maxX, maxY]];
+  }
+
   function gradeFromPercent(pct) {
     if (pct >= 90) return 'A';
     if (pct >= 80) return 'B';
@@ -92,7 +121,10 @@
   var correctCount = 0;
   var accepting = false;
   var gameEnded = false;
-  var gameData = null;
+  var overallBounds = null;
+  var zoomedAway = false;
+  var pendingId = null;
+  var pendingName = null;
 
   function updateStats() {
     var answered = currentIndex;
@@ -102,16 +134,33 @@
     scorePctEl.textContent = pct + '%';
   }
 
+  function clearPending() {
+    if (pendingId !== null) {
+      map.setFeatureState({ source: 'municipios', id: pendingId }, { selected: false });
+      pendingId = null;
+      pendingName = null;
+    }
+    chooseBtn.classList.add('hidden');
+  }
+
   function showNextTarget() {
+    clearPending();
+
     if (currentIndex >= queue.length) {
       endGame();
       return;
     }
+
     var target = queue[currentIndex];
-    targetNameEl.textContent = target.municipio;
+    targetNameEl.textContent = target.properties.municipio;
     feedbackEl.textContent = '';
     feedbackEl.className = 'feedback';
     accepting = true;
+
+    if (zoomedAway) {
+      zoomedAway = false;
+      map.fitBounds(overallBounds, { padding: 40, duration: 600 });
+    }
   }
 
   function endGame() {
@@ -125,33 +174,64 @@
     resultModalEl.classList.remove('hidden');
   }
 
-  function handleGuess(point) {
+  // Primer toque: solo resalta el municipio tocado (evita selecciones accidentales).
+  function handleMapClick(point) {
     if (!accepting || gameEnded) return;
+
+    var features = map.queryRenderedFeatures(point, { layers: ['municipios-fill'] });
+    if (features.length === 0) return;
+
+    var clickedId = features[0].id;
+    if (clickedId === pendingId) return;
+
+    if (pendingId !== null) {
+      map.setFeatureState({ source: 'municipios', id: pendingId }, { selected: false });
+    }
+    pendingId = clickedId;
+    pendingName = features[0].properties.municipio;
+    map.setFeatureState({ source: 'municipios', id: pendingId }, { selected: true });
+
+    feedbackEl.textContent = 'Tocaste ' + pendingName + '. Confirma tu selección.';
+    feedbackEl.className = 'feedback pending';
+    chooseBtn.classList.remove('hidden');
+  }
+
+  // Botón "Escoger": aquí se confirma y califica la selección.
+  function confirmChoice() {
+    if (!accepting || gameEnded || pendingId === null) return;
     accepting = false;
 
     var target = queue[currentIndex];
-    var features = map.queryRenderedFeatures(point, { layers: ['municipios-fill'] });
-    var clickedName = features.length > 0 ? features[0].properties.municipio : null;
-    var isCorrect = clickedName === target.municipio;
+    var isCorrect = pendingName === target.properties.municipio;
+
+    map.setFeatureState({ source: 'municipios', id: pendingId }, { selected: false });
+    pendingId = null;
+    pendingName = null;
+    chooseBtn.classList.add('hidden');
 
     map.setFeatureState(
-      { source: 'municipios', id: target.objectid },
+      { source: 'municipios', id: target.properties.objectid },
       { result: isCorrect ? 'correct' : 'incorrect' }
     );
+
+    var delay = FEEDBACK_DELAY_MS;
 
     if (isCorrect) {
       correctCount += 1;
       feedbackEl.textContent = '¡Correcto!';
       feedbackEl.className = 'feedback correct';
     } else {
-      feedbackEl.textContent = 'Incorrecto. Era ' + target.municipio + '.';
+      feedbackEl.textContent = 'Incorrecto.';
       feedbackEl.className = 'feedback incorrect';
+      map.fitBounds(computeMainRingBounds(target), { padding: 80, maxZoom: 12, duration: 900 });
+      zoomedAway = true;
+      delay = 2200;
     }
 
     currentIndex += 1;
     updateStats();
 
-    setTimeout(showNextTarget, FEEDBACK_DELAY_MS);
+    setTimeout(showNextTarget, delay);
   }
 
   function setupMap(data) {
@@ -167,15 +247,17 @@
       source: 'municipios',
       paint: {
         'fill-color': [
-          'match', ['feature-state', 'result'],
-          'correct', COLOR_SUCCESS,
-          'incorrect', COLOR_ERROR,
+          'case',
+          ['==', ['feature-state', 'result'], 'correct'], COLOR_SUCCESS,
+          ['==', ['feature-state', 'result'], 'incorrect'], COLOR_ERROR,
+          ['==', ['feature-state', 'selected'], true], COLOR_PENDING,
           COLOR_NEUTRAL
         ],
         'fill-opacity': [
-          'match', ['feature-state', 'result'],
-          'correct', 0.75,
-          'incorrect', 0.75,
+          'case',
+          ['==', ['feature-state', 'result'], 'correct'], 0.75,
+          ['==', ['feature-state', 'result'], 'incorrect'], 0.75,
+          ['==', ['feature-state', 'selected'], true], 0.6,
           0.08
         ]
       }
@@ -186,9 +268,21 @@
       type: 'line',
       source: 'municipios',
       paint: {
-        'line-color': '#2c2c28',
-        'line-width': 1,
-        'line-opacity': 0.4
+        'line-color': [
+          'case',
+          ['==', ['feature-state', 'selected'], true], COLOR_PENDING,
+          '#2c2c28'
+        ],
+        'line-width': [
+          'case',
+          ['==', ['feature-state', 'selected'], true], 2.5,
+          1
+        ],
+        'line-opacity': [
+          'case',
+          ['==', ['feature-state', 'selected'], true], 1,
+          0.4
+        ]
       }
     });
 
@@ -206,21 +300,22 @@
         'text-halo-color': '#f2ede4',
         'text-halo-width': 1.2,
         'text-opacity': [
-          'match', ['feature-state', 'result'],
-          'correct', 1,
-          'incorrect', 1,
+          'case',
+          ['==', ['feature-state', 'result'], 'correct'], 1,
+          ['==', ['feature-state', 'result'], 'incorrect'], 1,
           0
         ]
       }
     });
 
-    map.fitBounds(computeBounds(data.features), { padding: 40, animate: false });
+    overallBounds = computeBounds(data.features);
+    map.fitBounds(overallBounds, { padding: 40, animate: false });
 
-    map.on('click', function (e) { handleGuess(e.point); });
+    map.on('click', function (e) { handleMapClick(e.point); });
     map.on('mouseenter', 'municipios-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'municipios-fill', function () { map.getCanvas().style.cursor = ''; });
 
-    allMunicipios = data.features.map(function (f) { return f.properties; });
+    allMunicipios = data.features;
   }
 
   function startGame(chosenTotal) {
@@ -280,7 +375,6 @@
       new Promise(function (resolve) { map.on('load', resolve); })
     ]).then(function (results) {
       var data = results[0];
-      gameData = data;
 
       var layers = map.getStyle().layers;
       var stripKeywords = ['road', 'bridge', 'tunnel', 'path', 'place-city', 'place-town', 'place-village', 'place-hamlet', 'poi'];
@@ -304,6 +398,12 @@
 
   modeFullBtn.addEventListener('click', function () {
     startGame(parseInt(modeFullBtn.getAttribute('data-total'), 10));
+  });
+
+  chooseBtn.addEventListener('click', confirmChoice);
+
+  newsletterBtn.addEventListener('click', function () {
+    newsletterNoteEl.classList.remove('hidden');
   });
 
   function buildShareText() {

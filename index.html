@@ -18,6 +18,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VSL9FZ6W7P"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VSL9FZ6W7P');
+    </script>
   </head>
   <body>
     <div id="app">
@@ -39,7 +49,7 @@
         <div class="result-card intro-card">
           <p class="label-lg result-eyebrow">¡Bienvenido!</p>
           <h2 class="headline-md intro-title">¿Cuánto conoces los pueblos de Puerto Rico?</h2>
-          <p class="body-md intro-text">Aparecerá el nombre de un municipio. Toca en el mapa el lugar donde creas que está.</p>
+          <p class="body-md intro-text">Toca el municipio en el mapa y confirma tu selección con el botón "Escoger".</p>
           <div class="legend-row">
             <span class="legend-item"><span class="legend-swatch legend-correct"></span>Acertaste</span>
             <span class="legend-item"><span class="legend-swatch legend-incorrect"></span>Fallaste</span>
@@ -75,6 +85,8 @@
           </div>
 
           <div id="feedback" class="feedback" aria-live="polite"></div>
+
+          <button id="choose-btn" class="scan-button choose-btn hidden">Escoger</button>
         </div>
       </div>
 
@@ -87,7 +99,9 @@
           <p id="result-detail" class="body-md result-detail">Acertaste 0 de 78 municipios.</p>
 
           <div class="share-row">
-            <button id="share-btn" class="scan-button">Compartir mi resultado</button>
+            <button id="share-btn" class="scan-button hidden">Compartir mi resultado</button>
+            <button id="newsletter-btn" class="scan-button">Quiero enterarme de próximas publicaciones</button>
+            <p id="newsletter-note" class="body-sm instagram-note hidden">¡Pronto podrás suscribirte aquí! Por ahora, síguenos en nuestras redes.</p>
             <button id="instagram-btn" class="instagram-btn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/>

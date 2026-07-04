@@ -184,6 +184,11 @@ body {
 
 .feedback.correct { color: var(--success); }
 .feedback.incorrect { color: var(--error); }
+.feedback.pending { color: var(--tertiary); }
+
+.choose-btn {
+  margin-top: var(--space-sm);
+}
 
 /* Pantalla de resultado */
 .result-modal {
