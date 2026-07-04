@@ -3,12 +3,19 @@
   'use strict';
 
   var GEOJSON_URL = './municipios.geojson';
-  var TOTAL_MUNICIPIOS = 78;
   var FEEDBACK_DELAY_MS = 900;
+  var MIN_LOADING_MS = 1200;
 
   var COLOR_SUCCESS = '#2f6b4f';
   var COLOR_ERROR = '#ba1a1a';
   var COLOR_NEUTRAL = '#8f9a94';
+
+  var loadingOverlayEl = document.getElementById('loading-overlay');
+  var loadingFillEl = document.getElementById('loading-fill');
+  var loadingPctEl = document.getElementById('loading-pct');
+  var introModalEl = document.getElementById('intro-modal');
+  var modeQuickBtn = document.getElementById('mode-quick-btn');
+  var modeFullBtn = document.getElementById('mode-full-btn');
 
   var targetNameEl = document.getElementById('target-name');
   var progressFillEl = document.getElementById('progress-fill');
@@ -23,6 +30,7 @@
   var replayBtn = document.getElementById('replay-btn');
 
   if (typeof maplibregl === 'undefined') {
+    loadingOverlayEl.classList.add('hidden');
     targetNameEl.textContent = 'No se pudo cargar el mapa.';
     feedbackEl.textContent = 'Revisa tu conexión a internet e intenta de nuevo.';
     feedbackEl.className = 'feedback incorrect';
@@ -77,16 +85,19 @@
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 
+  var allMunicipios = [];
   var queue = [];
+  var total = 78;
   var currentIndex = 0;
   var correctCount = 0;
   var accepting = false;
   var gameEnded = false;
+  var gameData = null;
 
   function updateStats() {
     var answered = currentIndex;
-    progressFillEl.style.width = (answered / TOTAL_MUNICIPIOS) * 100 + '%';
-    progressFractionEl.textContent = answered + ' / ' + TOTAL_MUNICIPIOS;
+    progressFillEl.style.width = (answered / total) * 100 + '%';
+    progressFractionEl.textContent = answered + ' / ' + total;
     var pct = answered > 0 ? Math.round((correctCount / answered) * 100) : 0;
     scorePctEl.textContent = pct + '%';
   }
@@ -106,11 +117,11 @@
   function endGame() {
     gameEnded = true;
     targetNameEl.textContent = '¡Completado!';
-    var pct = Math.round((correctCount / TOTAL_MUNICIPIOS) * 100);
+    var pct = Math.round((correctCount / total) * 100);
     var grade = gradeFromPercent(pct);
     resultGradeEl.textContent = grade;
     resultPctEl.textContent = pct + '%';
-    resultDetailEl.textContent = 'Acertaste ' + correctCount + ' de ' + TOTAL_MUNICIPIOS + ' municipios.';
+    resultDetailEl.textContent = 'Acertaste ' + correctCount + ' de ' + total + ' municipios.';
     resultModalEl.classList.remove('hidden');
   }
 
@@ -143,7 +154,7 @@
     setTimeout(showNextTarget, FEEDBACK_DELAY_MS);
   }
 
-  function setupGame(data) {
+  function setupMap(data) {
     map.addSource('municipios', {
       type: 'geojson',
       data: data,
@@ -181,21 +192,87 @@
       }
     });
 
+    map.addLayer({
+      id: 'municipios-labels',
+      type: 'symbol',
+      source: 'municipios',
+      layout: {
+        'text-field': ['get', 'municipio'],
+        'text-size': 10,
+        'text-max-width': 8
+      },
+      paint: {
+        'text-color': '#1c1c18',
+        'text-halo-color': '#f2ede4',
+        'text-halo-width': 1.2,
+        'text-opacity': [
+          'match', ['feature-state', 'result'],
+          'correct', 1,
+          'incorrect', 1,
+          0
+        ]
+      }
+    });
+
     map.fitBounds(computeBounds(data.features), { padding: 40, animate: false });
 
     map.on('click', function (e) { handleGuess(e.point); });
     map.on('mouseenter', 'municipios-fill', function () { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'municipios-fill', function () { map.getCanvas().style.cursor = ''; });
 
-    queue = shuffle(data.features.map(function (f) { return f.properties; }));
+    allMunicipios = data.features.map(function (f) { return f.properties; });
+  }
+
+  function startGame(chosenTotal) {
+    total = chosenTotal;
+    queue = shuffle(allMunicipios).slice(0, total);
     currentIndex = 0;
     correctCount = 0;
+    gameEnded = false;
     updateStats();
     showNextTarget();
+    introModalEl.classList.add('hidden');
+  }
+
+  function animateLoading(realLoadPromise) {
+    var progress = 0;
+    var capBeforeReady = 90;
+    var startedAt = Date.now();
+
+    var interval = setInterval(function () {
+      if (progress < capBeforeReady) {
+        progress = Math.min(capBeforeReady, progress + 4);
+        loadingFillEl.style.width = progress + '%';
+        loadingPctEl.textContent = progress + '%';
+      }
+    }, 100);
+
+    realLoadPromise.then(function () {
+      var elapsed = Date.now() - startedAt;
+      var remaining = Math.max(0, MIN_LOADING_MS - elapsed);
+      setTimeout(function () {
+        clearInterval(interval);
+        loadingFillEl.style.width = '100%';
+        loadingPctEl.textContent = '100%';
+        setTimeout(function () {
+          loadingOverlayEl.classList.add('fade-out');
+          setTimeout(function () {
+            loadingOverlayEl.classList.add('hidden');
+            introModalEl.classList.remove('hidden');
+          }, 400);
+        }, 200);
+      }, remaining);
+    }).catch(function (err) {
+      clearInterval(interval);
+      loadingOverlayEl.classList.add('hidden');
+      targetNameEl.textContent = 'No se pudieron cargar los municipios.';
+      feedbackEl.textContent = 'Error: ' + err.message;
+      feedbackEl.className = 'feedback incorrect';
+    });
   }
 
   function init() {
-    Promise.all([
+    var loadPromise = Promise.all([
       fetch(GEOJSON_URL).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -203,6 +280,7 @@
       new Promise(function (resolve) { map.on('load', resolve); })
     ]).then(function (results) {
       var data = results[0];
+      gameData = data;
 
       var layers = map.getStyle().layers;
       var stripKeywords = ['road', 'bridge', 'tunnel', 'path', 'place-city', 'place-town', 'place-village', 'place-hamlet', 'poi'];
@@ -212,18 +290,24 @@
         }
       });
 
-      setupGame(data);
-    }).catch(function (err) {
-      targetNameEl.textContent = 'No se pudieron cargar los municipios.';
-      feedbackEl.textContent = 'Error: ' + err.message;
-      feedbackEl.className = 'feedback incorrect';
+      setupMap(data);
     });
+
+    animateLoading(loadPromise);
   }
 
   init();
 
+  modeQuickBtn.addEventListener('click', function () {
+    startGame(parseInt(modeQuickBtn.getAttribute('data-total'), 10));
+  });
+
+  modeFullBtn.addEventListener('click', function () {
+    startGame(parseInt(modeFullBtn.getAttribute('data-total'), 10));
+  });
+
   function buildShareText() {
-    var pct = Math.round((correctCount / TOTAL_MUNICIPIOS) * 100);
+    var pct = Math.round((correctCount / total) * 100);
     var grade = gradeFromPercent(pct);
     return 'Saqué una ' + grade + ' (' + pct + '%) reconociendo los pueblos de Puerto Rico en el mapa. ¿Puedes superarme?';
   }
