@@ -1,0 +1,370 @@
+:root {
+  /* Paleta tomada de Puerto Rico Geológico */
+  --surface: #fcf9f3;
+  --surface-container: #f0eee7;
+  --on-surface: #1c1c18;
+  --on-surface-variant: #424845;
+
+  --primary: #1d3a2f; /* Ceiba */
+  --on-primary: #ffffff;
+  --primary-container: #1d3a2f;
+
+  --secondary: #a0522d; /* Terracota */
+  --on-secondary: #ffffff;
+
+  --tertiary: #d4a843; /* Miel */
+
+  --carbon: #2c2c28; /* Carbón */
+  --carbon-10: rgba(44, 44, 40, 0.1);
+  --carbon-15: rgba(44, 44, 40, 0.15);
+
+  --niebla: #b8c4bc; /* Niebla */
+  --niebla-20: rgba(184, 196, 188, 0.2);
+
+  --lino: #f2ede4; /* Lino */
+
+  --success: #2f6b4f; /* Verde acierto, en la misma familia que Ceiba */
+  --success-container: #dbe9e1;
+  --error: #ba1a1a; /* Rojo error */
+  --error-container: #ffdad6;
+
+  --background: #f2ede4; /* Lino */
+
+  --font-hanken: 'Hanken Grotesk', sans-serif;
+  --font-vollkorn: 'Vollkorn', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --space-base: 8px;
+  --space-sm: 12px;
+  --space-md: 24px;
+  --space-lg: 40px;
+  --space-xl: 64px;
+  --space-margin: 32px;
+
+  --radius-sm: 0.125rem;
+  --radius-default: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-full: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
+  color: var(--carbon);
+  font-family: var(--font-vollkorn);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+#map {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Overlay de interfaz */
+#ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: var(--space-margin);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 10;
+}
+
+.headline-md { font-family: var(--font-hanken); font-size: 24px; font-weight: 600; line-height: 32px; margin: 0; }
+.body-md { font-family: var(--font-vollkorn); font-size: 16px; font-weight: 400; line-height: 24px; margin: 0; }
+.body-sm { font-family: var(--font-vollkorn); font-size: 14px; font-weight: 400; line-height: 20px; margin: 0; color: var(--on-surface-variant); }
+.label-lg { font-family: var(--font-hanken); font-size: 14px; font-weight: 600; line-height: 20px; letter-spacing: 0.05em; margin: 0; }
+.mono-data { font-family: var(--font-mono); font-size: 14px; font-weight: 600; line-height: 18px; margin: 0; }
+
+/* Tarjeta del encabezado del juego */
+.header {
+  background-color: var(--lino);
+  border: 1px solid var(--carbon-10);
+  padding: var(--space-md);
+  border-radius: var(--radius-default);
+  box-shadow: 2px 2px 0 var(--carbon-15);
+  width: 360px;
+  max-width: calc(100vw - var(--space-margin) * 2);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subtitle {
+  margin-top: var(--space-base);
+}
+
+.target-name {
+  font-family: var(--font-hanken);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: var(--space-base);
+  min-height: 36px;
+  line-height: 1.1;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 10px;
+  background-color: var(--niebla-20);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--tertiary);
+  transition: width 0.25s ease-out;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-base);
+  margin-top: var(--space-sm);
+  color: var(--on-surface-variant);
+}
+
+.score-pct {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+.feedback {
+  margin-top: var(--space-sm);
+  font-family: var(--font-hanken);
+  font-weight: 600;
+  font-size: 15px;
+  min-height: 20px;
+  transition: opacity 0.2s;
+}
+
+.feedback.correct { color: var(--success); }
+.feedback.incorrect { color: var(--error); }
+
+/* Pantalla de resultado */
+.result-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(28, 28, 24, 0.55);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-margin);
+}
+
+.result-card {
+  background-color: var(--lino);
+  border: 1px solid var(--carbon-10);
+  border-radius: var(--radius-lg);
+  box-shadow: 4px 4px 0 var(--carbon-15);
+  padding: var(--space-xl) var(--space-lg);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.result-eyebrow {
+  color: var(--secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.result-grade {
+  font-family: var(--font-hanken);
+  font-size: 96px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.result-pct {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-top: var(--space-base);
+}
+
+.result-detail {
+  margin-top: var(--space-sm);
+  color: var(--on-surface-variant);
+}
+
+.share-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* Botones (mismo estilo que Puerto Rico Geológico) */
+.scan-button {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  border-radius: var(--radius-default);
+  padding: 12px 24px;
+  font-family: var(--font-hanken);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 2px 2px 0 var(--carbon-15);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.scan-button:hover {
+  background-color: var(--primary-container);
+  color: var(--lino);
+}
+
+.scan-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--carbon-15);
+}
+
+.clear-selection-btn {
+  width: 100%;
+  padding: 10px;
+  font-family: var(--font-hanken);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-default);
+  background-color: transparent;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.clear-selection-btn:hover {
+  background-color: var(--carbon-10);
+}
+
+/* Panel de compartir en redes */
+.share-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-top: var(--space-sm);
+}
+
+.share-menu a {
+  font-family: var(--font-hanken);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  border: 1px solid var(--carbon-15);
+  border-radius: var(--radius-default);
+  padding: 6px 10px;
+}
+
+.share-menu a:hover {
+  background-color: var(--niebla-20);
+}
+
+/* Footer */
+.footer-info {
+  position: absolute;
+  bottom: var(--space-base);
+  right: var(--space-base);
+  z-index: 10;
+  max-width: calc(100vw - var(--space-margin) * 2);
+}
+
+.usgs-credit {
+  font-family: var(--font-hanken);
+  font-size: 11px;
+  color: var(--carbon);
+  background-color: rgba(242, 237, 228, 0.85);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.usgs-credit a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.usgs-credit a:hover {
+  text-decoration: underline;
+}
+
+/* Controles de MapLibre */
+.maplibregl-ctrl-bottom-right {
+  margin-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+}
+
+.maplibregl-ctrl-group {
+  background-color: var(--lino) !important;
+  border: 1px solid var(--carbon-10);
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 2px 2px 0 var(--carbon-15) !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background-color: var(--niebla-20) !important;
+}
+
+.maplibregl-ctrl-icon {
+  filter: sepia(1) hue-rotate(100deg) saturate(0.5) brightness(0.3);
+}
+
+@media (max-width: 480px) {
+  .header {
+    width: 100%;
+  }
+  .result-grade {
+    font-size: 72px;
+  }
+}

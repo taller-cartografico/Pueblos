@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Pueblos PR — ¿Cuánto conoces a Puerto Rico?</title>
+    <meta name="description" content="Pon a prueba cuánto conoces la ubicación de los 78 municipios de Puerto Rico. Encuentra cada pueblo en el mapa y obtén tu nota de A a F." />
+
+    <!-- MapLibre GL CSS -->
+    <link href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet" />
+
+    <!-- Google Fonts (mismas que Puerto Rico Geológico) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <div id="map"></div>
+
+      <!-- Encabezado del juego -->
+      <div id="ui-overlay" class="pointer-events-none">
+        <div id="game-header" class="header pointer-events-auto">
+          <div class="header-top">
+            <h1 class="headline-md">Pueblos de Puerto Rico</h1>
+          </div>
+          <p class="body-sm subtitle">Toca en el mapa dónde crees que está el municipio:</p>
+          <div id="target-name" class="target-name">Cargando…</div>
+
+          <div class="progress-row">
+            <div class="progress-bar-container">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <span id="progress-fraction" class="mono-data">0 / 78</span>
+          </div>
+
+          <div class="stats-row">
+            <span class="label-lg">Aciertos:</span>
+            <span id="score-pct" class="mono-data score-pct">0%</span>
+          </div>
+
+          <div id="feedback" class="feedback" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <!-- Pantalla de resultado final -->
+      <div id="result-modal" class="result-modal hidden pointer-events-auto">
+        <div class="result-card">
+          <p class="label-lg result-eyebrow">¡Juego terminado!</p>
+          <div id="result-grade" class="result-grade">A</div>
+          <div id="result-pct" class="result-pct">0%</div>
+          <p id="result-detail" class="body-md result-detail">Acertaste 0 de 78 municipios.</p>
+
+          <div class="share-row">
+            <button id="share-btn" class="scan-button">Compartir mi resultado</button>
+            <button id="replay-btn" class="clear-selection-btn">Jugar de nuevo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Créditos -->
+      <div id="footer-info" class="footer-info pointer-events-auto">
+        <div class="usgs-credit">
+          Límites municipales &copy; U.S. Census Bureau (TIGER/Line) · Estilo inspirado en
+          <a href="https://github.com/taller-cartografico/PR-Geol-gico" target="_blank" rel="noopener">Puerto Rico Geológico</a>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
