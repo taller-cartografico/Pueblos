@@ -7,10 +7,14 @@
     <title>Pueblos PR — ¿Cuánto conoces a Puerto Rico?</title>
     <meta name="description" content="Pon a prueba cuánto conoces la ubicación de los 78 municipios de Puerto Rico. Encuentra cada pueblo en el mapa y obtén tu nota de A a F." />
 
-    <!-- MapLibre GL CSS -->
-    <link href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <!-- MapLibre GL (CDN, sin necesidad de compilar) -->
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 
-    <!-- Google Fonts (mismas que Puerto Rico Geológico) -->
+    <!-- Estilos del juego -->
+    <link rel="stylesheet" href="./style.css" />
+
+    <!-- Tipografías (mismas que Puerto Rico Geológico) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
@@ -67,6 +71,7 @@
         </div>
       </div>
     </div>
-    <script type="module" src="/main.js"></script>
+
+    <script src="./main.js"></script>
   </body>
 </html>
