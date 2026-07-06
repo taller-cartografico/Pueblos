@@ -318,9 +318,10 @@ body {
   background-color: var(--carbon-10);
 }
 
-.instagram-note {
+.newsletter-heading {
   text-align: center;
-  margin-top: -4px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
 }
 
 /* Panel de compartir en redes */

@@ -30,8 +30,6 @@
   var shareBtn = document.getElementById('share-btn');
   var replayBtn = document.getElementById('replay-btn');
   var chooseBtn = document.getElementById('choose-btn');
-  var newsletterBtn = document.getElementById('newsletter-btn');
-  var newsletterNoteEl = document.getElementById('newsletter-note');
 
   if (typeof maplibregl === 'undefined') {
     loadingOverlayEl.classList.add('hidden');
@@ -401,10 +399,6 @@
   });
 
   chooseBtn.addEventListener('click', confirmChoice);
-
-  newsletterBtn.addEventListener('click', function () {
-    newsletterNoteEl.classList.remove('hidden');
-  });
 
   function buildShareText() {
     var pct = Math.round((correctCount / total) * 100);
