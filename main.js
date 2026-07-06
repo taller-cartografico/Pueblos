@@ -189,7 +189,7 @@
     pendingName = features[0].properties.municipio;
     map.setFeatureState({ source: 'municipios', id: pendingId }, { selected: true });
 
-    feedbackEl.textContent = 'Tocaste ' + pendingName + '. Confirma tu selección.';
+    feedbackEl.textContent = 'Confirma tu selección.';
     feedbackEl.className = 'feedback pending';
     chooseBtn.classList.remove('hidden');
   }
