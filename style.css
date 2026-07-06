@@ -318,28 +318,6 @@ body {
   background-color: var(--carbon-10);
 }
 
-.instagram-btn {
-  width: 100%;
-  padding: 10px;
-  font-family: var(--font-hanken);
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid var(--carbon-15);
-  border-radius: var(--radius-default);
-  background-color: transparent;
-  color: var(--carbon);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background-color 0.1s;
-}
-
-.instagram-btn:hover {
-  background-color: var(--niebla-20);
-}
-
 .instagram-note {
   text-align: center;
   margin-top: -4px;

@@ -453,45 +453,6 @@
     });
   }
 
-  var instagramBtn = document.getElementById('instagram-btn');
-  var instagramNoteEl = document.getElementById('instagram-note');
-
-  function copyToClipboard(text) {
-    if (navigator.clipboard) {
-      return navigator.clipboard.writeText(text);
-    }
-    var textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    try { document.execCommand('copy'); } catch (e) { /* ignora si no es compatible */ }
-    document.body.removeChild(textarea);
-    return Promise.resolve();
-  }
-
-  instagramBtn.addEventListener('click', function () {
-    var text = buildShareText();
-    var url = window.location.href;
-    var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    copyToClipboard(text + ' ' + url).then(function () {
-      instagramNoteEl.classList.remove('hidden');
-    });
-
-    if (isMobile) {
-      window.location.href = 'instagram://story-camera';
-      setTimeout(function () {
-        if (!document.hidden) {
-          window.open('https://www.instagram.com/', '_blank');
-        }
-      }, 800);
-    } else {
-      window.open('https://www.instagram.com/', '_blank');
-    }
-  });
-
   replayBtn.addEventListener('click', function () {
     window.location.reload();
   });
