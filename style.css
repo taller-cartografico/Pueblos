@@ -10,6 +10,7 @@
   --primary-container: #1d3a2f;
 
   --secondary: #a0522d; /* Terracota */
+  --secondary-dark: #773310; /* Terracota oscuro, para hover */
   --on-secondary: #ffffff;
 
   --tertiary: #d4a843; /* Miel */
@@ -271,6 +272,30 @@ body {
 }
 
 .scan-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--carbon-15);
+}
+
+.scan-button-secondary {
+  background-color: var(--secondary);
+  color: var(--on-secondary);
+  border: none;
+  border-radius: var(--radius-default);
+  padding: 12px 24px;
+  font-family: var(--font-hanken);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 2px 2px 0 var(--carbon-15);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.scan-button-secondary:hover {
+  background-color: var(--secondary-dark);
+}
+
+.scan-button-secondary:active {
   transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--carbon-15);
 }
